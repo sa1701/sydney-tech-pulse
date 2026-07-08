@@ -1,0 +1,12 @@
+[project]
+name = "pulse"
+version = "1.0.0"
+description = "Sydney Tech Pulse — job-market data pipeline"
+requires-python = ">=3.11"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
