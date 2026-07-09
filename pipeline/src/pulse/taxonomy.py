@@ -122,7 +122,7 @@ TAXONOMY: dict[str, tuple[str, str, str]] = {
     "agile":      ("Agile/Scrum", "practice", r"\bagile\b|\bscrum\b|\bkanban\b"),
     "tdd":        ("Testing/TDD", "practice", r"\btdd\b|\bunit\s+test|\btest[- ]driven\b|\bpytest\b|\bjest\b|\bplaywright\b|\bselenium\b|\bcypress\b"),
     "security":   ("Security", "practice", r"\bcyber\s*security\b|\bappsec\b|\bpenetration\s+test|\bowasp\b|\binfosec\b"),
-    "api-design": ("System Design", "practice", r"\bsystem\s+design\b|\bdistributed\s+systems?\b|\bscalab"),
+    "api-design": ("System Design", "practice", r"\bsystem\s+design\b|\bdistributed\s+systems?\b"),
 }
 
 COMPILED: dict[str, re.Pattern] = {

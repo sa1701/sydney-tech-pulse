@@ -35,6 +35,28 @@ create table if not exists job_skills (
 create index if not exists idx_job_skills_skill on job_skills (skill_slug);
 
 -- ---------------------------------------------------------------------------
+-- Row-level security: the dashboard's anon role may only ever read.
+-- The pipeline connects as the table owner, which RLS does not restrict.
+-- ---------------------------------------------------------------------------
+
+alter table jobs        enable row level security;
+alter table skills      enable row level security;
+alter table job_skills  enable row level security;
+
+do $$ begin
+    create policy anon_read_jobs       on jobs       for select using (true);
+    exception when duplicate_object then null;
+end $$;
+do $$ begin
+    create policy anon_read_skills     on skills     for select using (true);
+    exception when duplicate_object then null;
+end $$;
+do $$ begin
+    create policy anon_read_job_skills on job_skills for select using (true);
+    exception when duplicate_object then null;
+end $$;
+
+-- ---------------------------------------------------------------------------
 -- Analytics views — the dashboard reads ONLY these.
 -- ---------------------------------------------------------------------------
 
@@ -92,7 +114,7 @@ join skills s on s.slug = js.skill_slug
 where j.salary_min is not null
   and not j.salary_predicted
 group by 1, 2, 3
-having count(*) >= 5              -- suppress noisy tiny samples
+having count(*) >= 3              -- suppress noisy tiny samples (n shown in UI)
 order by median_salary_max desc;
 
 -- Momentum: this week's share vs the prior 4-week average share.

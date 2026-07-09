@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #0b0e11;
+  --panel: #12161b;
+  --line: #232a33;
+  --ink: #e6ebf0;
+  --muted: #8494a6;
+  --signal: #3ddc84;
+  --amber: #ffb01f;
+}
+
+/* Font vars are defined on <body> by next/font, so the family must be set
+   here — Tailwind's preflight sets it on <html>, where the vars don't resolve
+   and the browser silently falls back to Times. */
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+.mono {
+  font-family: var(--font-mono), ui-monospace, monospace;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.spec {
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
