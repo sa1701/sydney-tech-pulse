@@ -15,6 +15,31 @@ from .config import settings
 
 BASE = "https://api.adzuna.com/v1/api/jobs"
 
+# Adzuna sometimes returns a temporary 503. Retry 429/5xx and network errors
+# with backoff instead of failing the whole daily run on one bad response.
+MAX_ATTEMPTS = 4
+BACKOFF_SECONDS = (10, 30, 90)
+RETRY_STATUSES = {429, 500, 502, 503, 504}
+
+
+def _get_with_retry(client: httpx.Client, url: str, params: dict) -> httpx.Response:
+    """GET with retries on temporary failures; raise on the final attempt."""
+    for attempt in range(1, MAX_ATTEMPTS + 1):
+        try:
+            resp = client.get(url, params=params, timeout=30)
+            if resp.status_code not in RETRY_STATUSES or attempt == MAX_ATTEMPTS:
+                resp.raise_for_status()
+                return resp
+            reason = f"HTTP {resp.status_code}"
+        except httpx.TransportError as exc:
+            if attempt == MAX_ATTEMPTS:
+                raise
+            reason = type(exc).__name__
+        wait = BACKOFF_SECONDS[min(attempt - 1, len(BACKOFF_SECONDS) - 1)]
+        print(f"  Adzuna {reason}, retry {attempt}/{MAX_ATTEMPTS - 1} in {wait}s", flush=True)
+        time.sleep(wait)
+    raise RuntimeError("unreachable")
+
 
 def _normalise(raw: dict, search_role: str) -> dict:
     """Flatten one Adzuna result into our jobs-table shape."""
@@ -38,7 +63,8 @@ def fetch_role(client: httpx.Client, role: str, max_days_old: int,
                max_pages: int) -> Iterator[dict]:
     """Yield normalised postings for one role query, newest first."""
     for page in range(1, max_pages + 1):
-        resp = client.get(
+        resp = _get_with_retry(
+            client,
             f"{BASE}/{settings.country}/search/{page}",
             params={
                 "app_id": settings.adzuna_app_id,
@@ -49,9 +75,7 @@ def fetch_role(client: httpx.Client, role: str, max_days_old: int,
                 "max_days_old": max_days_old,
                 "sort_by": "date",
             },
-            timeout=30,
         )
-        resp.raise_for_status()
         results = resp.json().get("results", [])
         for raw in results:
             yield _normalise(raw, role)
